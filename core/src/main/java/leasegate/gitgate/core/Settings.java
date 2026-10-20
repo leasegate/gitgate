@@ -22,6 +22,10 @@ public final class Settings extends Settings_A {
     /// Patterns for git's global ignore file, which gitgate setup writes when this is not empty (and
     /// the user has no core.excludesFile of their own). Empty unless the settings name some.
     List<String> ignore = List.of();
+    /// Regular expressions over file paths never pushed under any account (each account can add its
+    /// own). A repository opts out with `git config gitgate.allowPaths true`; one push with
+    /// GITGATE_ALLOW_PATHS=1. Empty unless the settings name some.
+    List<String> forbiddenPaths = List.of();
     /// How the tray's windows are framed: 'glow' (default) or 'native'; `resizableWindows` the same
     /// for the resizable ones ('native' keeps Windows' snap and edge resizing).
     String windows = "glow";

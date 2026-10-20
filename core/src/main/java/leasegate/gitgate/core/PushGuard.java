@@ -43,11 +43,11 @@ public final class PushGuard {
         return hits;
     }
 
-    /// Files added or changed in commits not yet on a remote whose path matches one of the account's
-    /// `forbiddenPaths`.
-    public static List<String> paths(String git, Path repo, Account account) {
-        if (account.getForbiddenPaths().isEmpty()) return List.of();
-        var patterns = account.getForbiddenPaths().stream().map(Pattern::compile).toList();
+    /// Files added or changed in commits not yet on a remote whose path matches one of `forbidden`
+    /// (the settings' forbiddenPaths and the account's own).
+    public static List<String> paths(String git, Path repo, List<String> forbidden) {
+        if (forbidden.isEmpty()) return List.of();
+        var patterns = forbidden.stream().map(Pattern::compile).toList();
         var hits = new java.util.TreeSet<String>();
         try {
             var p = new ProcessBuilder(git, "-c", "core.quotepath=off", "log", "--name-only", "--diff-filter=AM", "--format=",

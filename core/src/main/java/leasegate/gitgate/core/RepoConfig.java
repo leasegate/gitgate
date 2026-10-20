@@ -10,11 +10,12 @@ import java.util.regex.Pattern;
 
 /// What a repository itself says, read straight from its own config file -- no git process, so it
 /// costs nothing on every command: the account gitgate recorded for it (`gitgate.account`), whether
-/// its commits are anonymous (`gitgate.identity = anonymous`), the identity set in it, and where its
+/// its commits are anonymous (`gitgate.identity = anonymous`), whether it may push files the settings
+/// otherwise refuse (`gitgate.allowPaths = true`), the identity set in it, and where its
 /// remotes point. Found by walking up from a folder to the `.git` folder (or the `.git` file of a
 /// worktree or submodule, which names the real one).
 public record RepoConfig(Path workTree, Path configFile, String account, boolean anonymous,
-                         String userName, String userEmail, Map<String, String> remotes) {
+                         String userName, String userEmail, Map<String, String> remotes, boolean allowPaths) {
 
     static final Pattern SECTION = Pattern.compile("^\\s*\\[\\s*([A-Za-z0-9.-]+)(?:\\s+\"(.*)\")?\\s*]\\s*$");
     static final Pattern GITHUB_ORG = Pattern.compile("github\\.com[^:/]*[:/]+([A-Za-z0-9_.-]+)/", Pattern.CASE_INSENSITIVE);
@@ -54,7 +55,7 @@ public record RepoConfig(Path workTree, Path configFile, String account, boolean
     }
 
     static RepoConfig read(Path workTree, Path config) {
-        String account = null, identity = null, userName = null, userEmail = null;
+        String account = null, identity = null, userName = null, userEmail = null, allowPaths = null;
         var remotes = new LinkedHashMap<String, String>();
         try {
             if (Files.isRegularFile(config)) {
@@ -71,6 +72,7 @@ public record RepoConfig(Path workTree, Path configFile, String account, boolean
                     switch (section + "." + key) {
                         case "gitgate.account" -> account = value;
                         case "gitgate.identity" -> identity = value;
+                        case "gitgate.allowpaths" -> allowPaths = value;
                         case "user.name" -> userName = value;
                         case "user.email" -> userEmail = value;
                         case "remote.url" -> { if (sub != null) remotes.put(sub, value); }
@@ -79,7 +81,7 @@ public record RepoConfig(Path workTree, Path configFile, String account, boolean
                 }
             }
         } catch (Exception ignored) {}
-        return new RepoConfig(workTree, config, account, "anonymous".equalsIgnoreCase(identity), userName, userEmail, remotes);
+        return new RepoConfig(workTree, config, account, "anonymous".equalsIgnoreCase(identity), userName, userEmail, remotes, "true".equalsIgnoreCase(allowPaths));
     }
 
     static String unquote(String v) {

@@ -89,11 +89,14 @@ public final class Hooks {
             err.println("If they are rightly someone else's, push with GITGATE_ALLOW_AUTHOR=1.");
             return 1;
         }
-        var paths = PushGuard.paths(git, repo.get().workTree(), account);
+        var forbidden = new java.util.ArrayList<>(s.getForbiddenPaths());
+        forbidden.addAll(account.getForbiddenPaths());
+        var paths = repo.get().allowPaths() ? java.util.List.<String>of() : PushGuard.paths(git, repo.get().workTree(), forbidden);
         if (!paths.isEmpty() && !"1".equals(System.getenv("GITGATE_ALLOW_PATHS"))) {
-            err.println("gitgate: push refused. Account " + account.getId() + " never publishes these files, and unpushed commits add or change them:");
+            err.println("gitgate: push refused. These files are never pushed (forbiddenPaths in " + Places.settings() + "), and unpushed commits add or change them:");
             paths.forEach(p -> err.println("  " + p));
-            err.println("Take them out of those commits (git rm --cached, then rewrite the unpushed commits), or push with GITGATE_ALLOW_PATHS=1 if this is deliberate.");
+            err.println("If this push is deliberate: GITGATE_ALLOW_PATHS=1 git push. If this repository keeps them on purpose: git config gitgate.allowPaths true");
+            err.println("Otherwise take them out of those commits (git rm --cached, then rewrite the unpushed commits).");
             return 1;
         }
         var hits = PushGuard.scan(git, repo.get().workTree(), account);

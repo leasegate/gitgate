@@ -28,6 +28,8 @@ windows = 'glow'           # optional: 'glow' (default) or 'native', how the tra
 resizableWindows = 'glow'  # optional: 'native' keeps Windows' snap and edge resizing for the resizable ones
 sharedAuthors = []         # optional: addresses any account's commits may carry besides its own (e.g. a coding agent's)
 ignore = []                # optional: patterns gitgate setup writes into git's global ignore file
+forbiddenPaths = []        # optional: file paths (regexes) never pushed under any account; deliberately anyway:
+                           #   one push: GITGATE_ALLOW_PATHS=1 git push; one repository: git config gitgate.allowPaths true
 sshHosts = ['github.com']  # the hosts gitgate's agent serves; an ssh to any other host gets no key from it
 
 [binaries]
@@ -58,7 +60,7 @@ paths = ['C:\code\example-org']
 pathRegex = ['.*/example-org-.*/.*']
 ssh = 'gate'               # or the path of a key file: the old, readable-by-anyone way
 forbidden = ['internal-codename']
-forbiddenPaths = ['(^|/)notes/']  # optional: file paths (regexes) never pushed under this account
+forbiddenPaths = ['(^|/)notes/']  # optional: more paths never pushed under this account
 ```
 
 Write Windows paths in single quotes: in a double-quoted TOML string every backslash is an escape.

@@ -30,10 +30,10 @@ public class HooksTrial {
         var work = Files.createDirectories(root.resolve("work"));
         var toml = root.resolve("settings.toml");
         Files.writeString(toml, String.join("\n",
-            "sharedAuthors = ['agent@example.org']", "ignore = ['/notes/', 'AGENTS.md']", "",
+            "sharedAuthors = ['agent@example.org']", "ignore = ['/notes/', 'AGENTS.md']", "forbiddenPaths = ['(^|/)notes/.*\\.md$']", "",
             "[binaries]", "git = '" + git + "'", "",
             "[newRepo]", "defaultAccount = 'aa'", "",
-            "[[account]]", "id = 'aa'", "name = 'Alpha'", "userName = 'alpha'", "userEmail = 'alpha@example.org'", "orgs = ['alpha-org']", "paths = ['" + work + "']", "forbiddenPaths = ['(^|/)notes/.*\\.md$']", "",
+            "[[account]]", "id = 'aa'", "name = 'Alpha'", "userName = 'alpha'", "userEmail = 'alpha@example.org'", "orgs = ['alpha-org']", "paths = ['" + work + "']", "",
             "[[account]]", "id = 'bb'", "name = 'Beta'", "userName = 'beta'", "userEmail = 'beta@example.org'", "orgs = ['beta-org']", ""));
         var s = SettingsStore.load(toml);
 
@@ -90,6 +90,8 @@ public class HooksTrial {
         g(rp, "add", "-f", "notes/plan.md");
         g(rp, "-c", "user.name=alpha", "-c", "user.email=alpha@example.org", "-c", "core.hooksPath=", "commit", "-q", "-m", "notes");
         check("pre-push with a file the account never publishes (notes/*.md): refused", Hooks.prePush(s, rp, "git@github.com:alpha-org/rp.git", never, out) == 1);
+        g(rp, "config", "gitgate.allowPaths", "true");
+        check("...but a repository that keeps them on purpose (gitgate.allowPaths true) pushes them", Hooks.prePush(s, rp, "git@github.com:alpha-org/rp.git", never, out) == 0);
         check("...and git's global ignore keeps notes/ out of git add", cfg(rp, "core.excludesFile").endsWith("/ignore") && ignored(rp, "notes/more.md") && !ignored(rp, "src/notes/Thing.java"));
 
         GitSetup.undo(s);
