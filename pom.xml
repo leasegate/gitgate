@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.leasegate</groupId>
     <artifactId>gitgate-parent</artifactId>
-    <version>0.1</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>gitgate</name>
     <description>git and GitHub CLI behind a leasegate gate: the account chosen by directory, SSH keys that never leave the gate, GitHub tokens released per process and per tier.</description>
@@ -35,7 +35,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
-        <leasegate.version>0.1</leasegate.version>
+        <leasegate.version>0.2-SNAPSHOT</leasegate.version>
         <jackson.version>2.21.2</jackson.version>
         <datahelper.version>2.0</datahelper.version>
         <picocli.version>4.7.6</picocli.version>
