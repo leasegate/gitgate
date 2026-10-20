@@ -20,7 +20,7 @@ public final class SettingsStore {
 
     public static Settings load(Path file) {
         if (!Files.exists(file)) throw new IllegalStateException("gitgate has no settings yet: " + file
-            + " -- run `gitgate migrate` to make them from the old settings, or write them by hand (see the README)");
+            + " -- write it by hand (see the README for its shape)");
         try {
             var s = TOML.readValue(file.toFile(), Settings.class);
             var b = s.getBinaries();

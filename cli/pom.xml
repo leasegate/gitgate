@@ -76,12 +76,22 @@
                             <companyName>leasegate</companyName>
                             <productName>gitgate</productName>
                             <copyright>leasegate contributors</copyright>
+                            <!-- They live a fraction of a second: a small heap, the Serial collector, C1 only. -->
+                            <vmArgs>
+                                <vmArg>-Xms8m</vmArg>
+                                <vmArg>-Xmx64m</vmArg>
+                                <vmArg>-Xss512k</vmArg>
+                                <vmArg>-XX:+UseSerialGC</vmArg>
+                                <vmArg>-XX:TieredStopAtLevel=1</vmArg>
+                                <vmArg>-XX:ReservedCodeCacheSize=24m</vmArg>
+                                <vmArg>--enable-native-access=ALL-UNNAMED</vmArg>
+                            </vmArgs>
                             <icon>${project.basedir}/src/main/jr/gitgate.ico</icon>
                         </configuration>
                         <executions>
-                            <execution><id>git</id><goals><goal>exe</goal></goals><configuration><name>git</name><appId>io.github.leasegate:gitgate-git</appId><fileDescription>git through gitgate</fileDescription><vmArgs><vmArg>--enable-native-access=ALL-UNNAMED</vmArg></vmArgs></configuration></execution>
-                            <execution><id>gh</id><goals><goal>exe</goal></goals><configuration><name>gh</name><appId>io.github.leasegate:gitgate-gh</appId><fileDescription>gh through gitgate</fileDescription><vmArgs><vmArg>--enable-native-access=ALL-UNNAMED</vmArg></vmArgs></configuration></execution>
-                            <execution><id>git1st</id><goals><goal>exe</goal></goals><configuration><name>git1st</name><appId>io.github.leasegate:gitgate-git1st</appId><fileDescription>make this folder a GitHub repository</fileDescription><vmArgs><vmArg>--enable-native-access=ALL-UNNAMED</vmArg></vmArgs></configuration></execution>
+                            <execution><id>git</id><goals><goal>exe</goal></goals><configuration><name>git</name><appId>io.github.leasegate:gitgate-git</appId><fileDescription>git through gitgate</fileDescription></configuration></execution>
+                            <execution><id>gh</id><goals><goal>exe</goal></goals><configuration><name>gh</name><appId>io.github.leasegate:gitgate-gh</appId><fileDescription>gh through gitgate</fileDescription></configuration></execution>
+                            <execution><id>git1st</id><goals><goal>exe</goal></goals><configuration><name>git1st</name><appId>io.github.leasegate:gitgate-git1st</appId><fileDescription>make this folder a GitHub repository</fileDescription></configuration></execution>
                         </executions>
                     </plugin>
                 </plugins>

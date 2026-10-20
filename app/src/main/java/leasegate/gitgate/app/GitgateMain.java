@@ -13,7 +13,7 @@ import leasegate.transport.LeaseDeniedException;
 import leasegate.transport.Links;
 
 /// `gitgate` with no arguments starts the tray. With a verb it is a small command line that never
-/// sees a secret: `migrate` writes settings.toml from the old tools' files, `status` asks the
+/// sees a secret: `status` asks the
 /// running tray what it holds (names and fingerprints only), `pubkey <account>` prints the public
 /// key to give to GitHub.
 public final class GitgateMain {
@@ -21,13 +21,11 @@ public final class GitgateMain {
     public static void main(String[] args) {
         if (args.length == 0) { GitgateApp.main(args); return; }
         System.exit(switch (args[0]) {
-            case "migrate" -> Migrate.run();
             case "status" -> status();
             case "pubkey" -> pubkey(args.length > 1 ? args[1] : null);
             case "aliases" -> aliases(args.length > 1 ? args[1] : null);
             default -> {
                 System.err.println("usage: gitgate                  start the tray (it holds the keys and tokens)");
-                System.err.println("       gitgate migrate          write " + Places.settings() + " from the old settings files");
                 System.err.println("       gitgate status           what the running tray holds: accounts, key fingerprints, tokens present");
                 System.err.println("       gitgate pubkey <account> the account's public key line, for GitHub");
                 System.err.println("       gitgate aliases <dir>    copy <dir>\\git.exe and gh.exe to git<account>.exe and gh<account>.exe, for every account");
