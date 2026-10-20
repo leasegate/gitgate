@@ -44,7 +44,7 @@ public class HooksTrial {
         check("gitgate's config: ssh = Windows OpenSSH path, hooksPath, includeIf by org and by folder",
             mine.contains("sshCommand = ") && mine.contains("hooksPath = ") && mine.contains("hasconfig:remote.*.url:git@github.com:alpha-org/**") && mine.contains("gitdir/i:" + work.toString().replace('\\', '/') + "/"));
         var ssh = Files.readString(root.resolve("userhome/.ssh/config"));
-        check("~/.ssh/config: one Include line first, the agent in gitgate's own file, the user's own block kept", ssh.startsWith(GitSetup.SSH_MARK) && ssh.contains("Include ") && Files.readString(GitSetup.sshInclude()).contains("IdentityAgent //./pipe/") && ssh.contains("Host other"));
+        check("~/.ssh/config: one Include line first, the agent in gitgate's own file, the user's own block kept", ssh.startsWith(leasegate.sshagent.SshConfigInclude.marker("gitgate")) && ssh.contains("Include ") && Files.readString(GitSetup.sshInclude()).contains("IdentityAgent //./pipe/") && ssh.contains("Host other"));
         check("the settings' ignore list becomes git's global ignore file", mine.contains("excludesFile = ") && Files.readString(GitSetup.ignoreFile()).contains("/notes/"));
         check("hooks written",Files.exists(GitSetup.hooks().resolve("pre-commit")) && Files.exists(GitSetup.hooks().resolve("pre-push")));
         check("install again changes nothing", GitSetup.install(s, "C:/fake/gitgate.exe").size() == 4);

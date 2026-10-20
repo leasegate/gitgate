@@ -18,6 +18,11 @@
             <version>${leasegate.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.github.leasegate</groupId>
+            <artifactId>leasegate-sshagent</artifactId>
+            <version>${leasegate.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-toml</artifactId>
             <version>${jackson.version}</version>

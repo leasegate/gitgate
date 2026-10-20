@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import leasegate.sshagent.SshConfigInclude;
+
 /// Makes the official git and ssh work through gitgate with no program of gitgate's in between.
 /// gitgate keeps its git settings in a file of its own, which `~/.gitconfig` includes with one
 /// line at its end:
@@ -24,7 +26,8 @@ import java.util.List;
 /// ~/.ssh/config are never touched. `undo` removes the two lines.
 public final class GitSetup {
 
-    static final String SSH_MARK = "# gitgate: github.com through the gitgate agent (gitgate setup --undo removes this line)";
+    static final String GATE = "gitgate";
+    static final String LEGACY_MARK = "# gitgate: github.com through the gitgate agent (gitgate setup --undo removes this line)";
 
     public static Path dir() { return Places.home().resolve("git"); }
     public static Path config() { return dir().resolve("gitgate.gitconfig"); }
@@ -62,7 +65,10 @@ public final class GitSetup {
         }
         Files.writeString(config(), cfg.toString());
         done.add(config().toString());
-        Files.writeString(sshInclude(), "# Written by gitgate -- edit " + Places.settings() + ", not this.\nHost github.com\n    IdentityAgent " + Places.agentForSsh() + "\n");
+        var blocks = sshBlocks(s);
+        var clash = SshConfigInclude.conflicts(sshConfig(), GATE, blocks);
+        if (!clash.isEmpty()) throw new IllegalStateException("gitgate's ssh hosts clash with another gate: " + String.join("; ", clash) + ". Change sshHosts in " + Places.settings() + ".");
+        SshConfigInclude.writeOwn(sshInclude(), GATE, Places.settings().toString(), blocks);
         done.add(sshInclude().toString());
         var exe = gitgateExe.replace('\\', '/');
         Files.writeString(hooks().resolve("pre-commit"), String.join("\n",
@@ -93,14 +99,9 @@ public final class GitSetup {
             throw new IllegalStateException("~/.gitconfig already sets core.hooksPath = " + hooksNow + "; gitgate's hooks would replace it. Remove it first.");
         var includes = run(git, "config", "--global", "--get-all", "include.path");
         if (!includes.contains(slash(config()))) { run(git, "config", "--global", "--add", "include.path", slash(config())); done.add("~/.gitconfig: include.path " + slash(config())); }
-        var ssh = sshConfig();
-        var text = Files.exists(ssh) ? Files.readString(ssh) : "";
-        if (!text.contains(SSH_MARK)) {
-            Files.createDirectories(ssh.getParent());
-            if (Files.exists(ssh)) Files.copy(ssh, ssh.resolveSibling("config.before-gitgate"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            Files.writeString(ssh, includeLines() + "\n" + text);
-            done.add(ssh + ": Include " + slash(sshInclude()) + " (backup config.before-gitgate)");
-        }
+        if (removeLegacy()) done.add(sshConfig() + ": the earlier form of gitgate's two lines replaced");
+        if (SshConfigInclude.install(sshConfig(), GATE, sshInclude()))
+            done.add(sshConfig() + ": " + SshConfigInclude.include(sshInclude()) + " (backup config.before-gitgate)");
         return done;
     }
 
@@ -111,20 +112,25 @@ public final class GitSetup {
             run(git, "config", "--global", "--unset", "--fixed-value", "include.path", slash(config()));
             done.add("~/.gitconfig: include line removed");
         }
-        var ssh = sshConfig();
-        if (Files.exists(ssh)) {
-            var text = Files.readString(ssh);
-            var line = includeLines();
-            if (text.contains(line)) {
-                Files.writeString(ssh, text.replace(line + "\n", "").replace(line, ""));
-                done.add(ssh + ": Include line removed");
-            }
-        }
+        if (SshConfigInclude.undo(sshConfig(), GATE) | removeLegacy()) done.add(sshConfig() + ": gitgate's Include line removed");
         return done;
     }
 
-    /// The two lines gitgate puts at the top of ~/.ssh/config: its mark, and the Include.
-    static String includeLines() { return SSH_MARK + "\nInclude " + slash(sshInclude()) + "\n"; }
+    /// gitgate's block for each host it serves: its agent, and nothing else (the agent picks the key).
+    static List<SshConfigInclude.Block> sshBlocks(Settings s) {
+        return List.of(new SshConfigInclude.Block(s.getSshHosts(), List.of("IdentityAgent " + Places.agentForSsh())));
+    }
+
+    /// The two lines an earlier gitgate wrote, under its own wording; removed, nothing else touched.
+    static boolean removeLegacy() throws Exception {
+        var ssh = sshConfig();
+        if (!Files.exists(ssh)) return false;
+        var text = Files.readString(ssh);
+        var old = LEGACY_MARK + "\nInclude " + slash(sshInclude()) + "\n";
+        if (!text.contains(old)) return false;
+        Files.writeString(ssh, text.replace(old + "\n", "").replace(old, ""));
+        return true;
+    }
 
     public static boolean installed(Settings s) {
         try { return run(s.getBinaries().getGit(), "config", "--global", "--get-all", "include.path").contains(slash(config())); }
