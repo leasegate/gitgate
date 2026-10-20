@@ -76,6 +76,7 @@
                             <companyName>leasegate</companyName>
                             <productName>gitgate</productName>
                             <copyright>leasegate contributors</copyright>
+                            <icon>${project.basedir}/src/main/jr/gitgate.ico</icon>
                         </configuration>
                         <executions>
                             <execution><id>git</id><goals><goal>exe</goal></goals><configuration><name>git</name><appId>io.github.leasegate:gitgate-git</appId><fileDescription>git through gitgate</fileDescription><vmArgs><vmArg>--enable-native-access=ALL-UNNAMED</vmArg></vmArgs></configuration></execution>

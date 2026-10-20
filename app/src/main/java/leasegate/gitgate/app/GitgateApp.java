@@ -55,7 +55,7 @@ public final class GitgateApp extends Application {
         Thread.ofPlatform().name("gitgate-agent").daemon().start(() -> agent.serve(agentPipe, "gitgate-agent"));
 
         Runnable changed = () -> {};
-        var tray = new TrayShell<>(stage, engine, gate, GateIcon.image("#2e7d32"), () -> line(secrets, engine));
+        var tray = new TrayShell<>(stage, engine, gate, GateIcon.image(GitgateApp.class, "tray.png", "#2e7d32"), () -> line(secrets, engine));
         tray.addItem(TrayShell.item("Set GitHub token…", () -> TokenDialog.show(settings, secrets, changed)))
             .addItem(TrayShell.item("SSH keys…", () -> KeysWindow.show(Places.PRODUCT, settings.getAccount().stream().map(a -> new KeysWindow.Entry(a.getId(), a.getName())).toList(), secrets.keys,
                 "Add it on GitHub, signed in as that account: Settings, SSH and GPG keys, New SSH key.", changed)))

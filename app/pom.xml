@@ -89,6 +89,7 @@
                         </executions>
                         <configuration>
                             <name>gitgate</name>
+                            <icon>${project.basedir}/src/main/jr/gitgate.ico</icon>
                             <appId>io.github.leasegate:gitgate</appId>
                             <fileDescription>gitgate</fileDescription>
                             <productName>gitgate</productName>
