@@ -23,7 +23,6 @@ public final class GitgateMain {
         System.exit(switch (args[0]) {
             case "status" -> status();
             case "pubkey" -> pubkey(args.length > 1 ? args[1] : null);
-            case "aliases" -> aliases(args.length > 1 ? args[1] : null);
             case "which" -> which(args.length > 1 ? args[1] : ".");
             case "assign" -> assign(List.of(args).subList(1, args.length));
             case "audit" -> audit(List.of(args).subList(1, args.length));
@@ -33,7 +32,6 @@ public final class GitgateMain {
                 System.err.println("usage: gitgate                  start the tray (it holds the keys and tokens)");
                 System.err.println("       gitgate status           what the running tray holds: accounts, key fingerprints, tokens present");
                 System.err.println("       gitgate pubkey <account> the account's public key line, for GitHub");
-                System.err.println("       gitgate aliases <dir>    copy <dir>\\git.exe and gh.exe to git<account>.exe and gh<account>.exe, for every account");
                 System.err.println("       gitgate which [dir]      which account a repository is, and what each rule says");
                 System.err.println("       gitgate assign <account> [--anonymous] [dir]   record a repository's account in its own .git/config");
                 System.err.println("       gitgate audit [dir...]   commits already made under another account's identity (default: every account's folders)");
@@ -165,23 +163,6 @@ public final class GitgateMain {
             System.err.println("gitgate: the gitgate tray is not running, so it cannot ask.");
             return java.util.Optional.empty();
         } catch (Exception e) { System.err.println("gitgate: " + e.getMessage()); return java.util.Optional.empty(); }
-    }
-
-    /// An alias is the same exe under another name: it reads its account from that name.
-    static int aliases(String dir) {
-        if (dir == null) { System.err.println("usage: gitgate aliases <folder holding git.exe and gh.exe>"); return 2; }
-        try {
-            var d = Path.of(dir);
-            for (var a : SettingsStore.load().getAccount()) {
-                for (var tool : List.of("git", "gh")) {
-                    var from = d.resolve(tool + ".exe");
-                    var to = d.resolve(tool + a.getId() + ".exe");
-                    Files.copy(from, to, StandardCopyOption.REPLACE_EXISTING);
-                    System.out.println(to + "  (" + tool + " as " + a.getId() + ")");
-                }
-            }
-            return 0;
-        } catch (Exception e) { System.err.println("gitgate: " + e.getMessage()); return 1; }
     }
 
     private GitgateMain() {}

@@ -42,6 +42,8 @@ public class CoreTrial {
         check("gh repo edit (visibility) is admin", tier("repo", "edit", "--visibility", "public") == Tier.ADMIN);
         check("gh secret set is admin", tier("secret", "set", "X") == Tier.ADMIN);
         check("gh alias set is admin", tier("alias", "set", "x", "!echo") == Tier.ADMIN);
+        check("gh config set is admin (a pager or editor runs with the token in reach)", tier("config", "set", "pager", "x") == Tier.ADMIN);
+        check("gh config get and list are reads", tier("config", "get", "git_protocol") == Tier.READ && tier("config", "list") == Tier.READ);
         check("gh extension install is admin", tier("extension", "install", "a/b") == Tier.ADMIN);
         check("gh api GET is a read", tier("api", "repos/o/r") == Tier.READ);
         check("gh api with -X DELETE is admin", tier("api", "-X", "DELETE", "repos/o/r") == Tier.ADMIN);

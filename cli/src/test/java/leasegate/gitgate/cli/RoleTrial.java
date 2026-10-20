@@ -6,7 +6,7 @@ public class RoleTrial {
     public static void main(String[] a) {
         var ok = Main.role("git.exe").tool().isEmpty()
             && Main.role("GH.EXE").equals(new Main.Role("gh", null))
-            && Main.role("git1st.exe").equals(new Main.Role("git1st", null))
+            && Main.role("git1st.exe").tool().isEmpty()
             && Main.role("gitwork.exe").tool().isEmpty()
             && Main.role("ghwork").equals(new Main.Role("gh", "work"))
             && Main.role("tool.exe").tool().isEmpty()

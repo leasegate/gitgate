@@ -27,7 +27,6 @@ public final class SettingsStore {
             b.setGit(expand(b.getGit()));
             b.setGh(expand(b.getGh()));
             b.setSsh(expand(b.getSsh()));
-            s.getNewRepo().setGitignoreTemplates(expand(s.getNewRepo().getGitignoreTemplates()));
             for (var a : s.getAccount()) {
                 a.setSsh(expand(a.getSsh()));
                 a.setPaths(a.getPaths().stream().map(SettingsStore::expand).toList());

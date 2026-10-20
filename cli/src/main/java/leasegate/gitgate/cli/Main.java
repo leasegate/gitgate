@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 /// One jar behind several exes, told apart by the exe's own name (jr passes its path as
-/// `io.github.jarrunner.jr.exe`): `gh` and `git1st` do what they say; `gh<account>` is gh with the account fixed -- a copy of
+/// `io.github.jarrunner.jr.exe`): `gh` does what it says; `gh<account>` is gh with the account fixed -- a copy of
 /// gh.exe under another name. There is no `git`: the official git runs through gitgate (`gitgate setup`). Run as a plain jar, the first argument is that name.
 public final class Main {
 
@@ -22,7 +22,6 @@ public final class Main {
         try {
             System.exit(switch (role.tool()) {
                 case "gh" -> GhRun.proxy(args, role.account());
-                case "git1st" -> new Git1st(role.account()).run();
                 default -> usage();
             });
         } catch (IllegalStateException e) {
@@ -33,7 +32,6 @@ public final class Main {
 
     static Role role(String exeName) {
         var n = exeName.toLowerCase(Locale.ROOT).replaceFirst("\\.exe$", "");
-        if (n.startsWith("git1st")) return new Role("git1st", blankToNull(n.substring(6)));
         if (n.startsWith("gh")) return new Role("gh", blankToNull(n.substring(2)));
         return new Role("", null);
     }
@@ -41,7 +39,7 @@ public final class Main {
     static String blankToNull(String s) { return s.isBlank() ? null : s; }
 
     static int usage() {
-        System.err.println("usage: java -jar gitgate-cli.jar git|gh|git1st|gh<account> [args...]  (the exes pass their own name)");
+        System.err.println("usage: java -jar gitgate-cli.jar gh|gh<account> [args...]  (the exes pass their own name)");
         return 2;
     }
 

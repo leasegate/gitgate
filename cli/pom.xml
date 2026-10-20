@@ -8,9 +8,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>gitgate-cli</artifactId>
-    <name>gitgate cli: the git, gh and git1st launchers</name>
+    <name>gitgate cli: the gh launcher</name>
     <packaging>jar</packaging>
-    <description>The git and gh proxies, the one-account aliases and git1st. No JavaFX, so they start fast.</description>
+    <description>gh through gitgate: the account chosen like git does, the token from the gate for one run. No JavaFX, so it starts fast.</description>
     <properties>
         <main.class>leasegate.gitgate.cli.Main</main.class>
     </properties>
@@ -91,7 +91,6 @@
                         </configuration>
                         <executions>
                             <execution><id>gh</id><goals><goal>exe</goal></goals><configuration><name>gh</name><appId>io.github.leasegate:gitgate-gh</appId><fileDescription>gh through gitgate</fileDescription></configuration></execution>
-                            <execution><id>git1st</id><goals><goal>exe</goal></goals><configuration><name>git1st</name><appId>io.github.leasegate:gitgate-git1st</appId><fileDescription>make this folder a GitHub repository</fileDescription></configuration></execution>
                         </executions>
                     </plugin>
                 </plugins>

@@ -38,6 +38,8 @@ public sealed interface GhCommand {
         if (cmd.equals("release") && sub.equals("delete")) return new Allowed(Tier.ADMIN, detail);
         if (cmd.equals("variable") && !READ_VERBS.contains(sub)) return new Allowed(Tier.ADMIN, detail);
         if (cmd.equals("ruleset")) return new Allowed(READ_VERBS.contains(sub) ? Tier.READ : Tier.ADMIN, detail);
+        if (cmd.equals("config") && !Set.of("get", "list").contains(sub))
+            return new Allowed(Tier.ADMIN, detail + " (gh runs its configured pager, editor and browser with the token in its environment)");
         if (Set.of("help", "version", "completion", "config", "status").contains(cmd)) return new Allowed(Tier.READ, detail);
         return new Allowed(READ_VERBS.contains(sub) ? Tier.READ : Tier.WRITE, detail);
     }

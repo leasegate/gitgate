@@ -16,8 +16,8 @@ gitgate is a [leasegate](https://github.com/leasegate/leasegate) gate for git an
 - **Each gate looks like itself.** Its windows open with a wide band in its own colour, its icon large and its name, so a gitgate request is never mistaken for another gate's. For the first two seconds every key is ignored, and approving takes F2, never a letter: a word typed into another window cannot approve anything.
 - **Every approval is a leasegate approval:** the window shows the requesting process and its whole chain (`ssh.exe` under `git.exe` under `bash.exe` under an agent), the human picks how far up it reaches and for how long, and it ends when that process exits. One approval to push as an account covers all of its repositories until it ends.
 - **A push guard** (gitgate's pre-push hook). The repository's account must own the organisation being pushed to; an account can name `forbidden` terms (regular expressions), and every commit not yet on a remote -- messages and patches -- is searched for them. A push to a public repository cannot be taken back; this is the last moment a word that must not be there can be caught. `GITGATE_ALLOW_AUTHOR=1` and `GITGATE_ALLOW_FORBIDDEN=1` let a push through deliberately. gitgate's hooks run the repository's own hook of the same name afterwards.
-- **`gh.exe`** stays a stand-in for the real gh, because gh takes a token only from its environment: it picks the account like git does and hands the token to the one gh process. One-account aliases (`ghwork`, ...) are copies of it with the account fixed. (A `git.exe` stand-in is still built, for machines that do not run `gitgate setup`.)
-- **`git1st`** makes the current folder a repository and gives it a home on GitHub: account, organisation, .gitignore template, visibility, then init, first commit, the push guard, `gh repo create`, an SSH remote (never https), first push.
+- **`gh.exe`** stays a stand-in for the real gh, because gh takes a token only from its environment: it picks the account like git does and hands the token to the one gh process. A copy named `gh<account>.exe` runs with that account fixed. `gh config set` is ADMIN: gh runs its configured pager, editor and browser with the token in its environment.
+- **A new repository is plain git and gh:** `git init`, commit, then `gh repo create <org>/<name> --private --source=. --push`. With gh's `git_protocol` set to `ssh`, the remote is SSH from the start (an https remote would need a credential helper, which an agent's shell cannot answer), and the hooks decide the account and guard the first push.
 
 ## Settings
 
@@ -37,9 +37,7 @@ accountLine = 'stderr'     # stdout | stderr | none
 noArgs = 'stdout'
 
 [newRepo]
-defaultAccount = 'work'
-gitignore = 'java'
-gitignoreTemplates = 'C:\tools\gitignore-templates'
+defaultAccount = 'work'    # the account for reading from an organisation no account's `orgs` lists
 
 [anonymous]                # optional: the identity of repositories marked anonymous
 userName = 'User'
@@ -79,7 +77,7 @@ Start `gitgate.exe` (the tray). On first run it asks for a passphrase and shows 
 
 ## Building
 
-JDK 25, Maven, and [leasegate](https://github.com/leasegate/leasegate) installed first (`mvn install` there). Then `mvn install` here; `mvn -Djrexe -Djr.installDir=<a folder on PATH> package` builds the exes with [jr](https://github.com/jarrunner/jr) (gitgate, gh, git1st). Then start the tray and run `gitgate setup` once.
+JDK 25, Maven, and [leasegate](https://github.com/leasegate/leasegate) installed first (`mvn install` there). Then `mvn install` here; `mvn -Djrexe -Djr.installDir=<a folder on PATH> package` builds the exes with [jr](https://github.com/jarrunner/jr) (gitgate, gh). Then start the tray and run `gitgate setup` once.
 
 Windows only for now: the agent pipe and the process-chain reading are Windows code paths in leasegate, and gitgate relies on Windows' OpenSSH reaching an agent on a named pipe (`IdentityAgent=//./pipe/<name>`, forward slashes -- the backslash form is not accepted).
 
