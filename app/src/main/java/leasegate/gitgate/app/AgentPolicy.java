@@ -32,7 +32,17 @@ final class AgentPolicy implements SignPolicy {
         this.brand = brand;
     }
 
+    /// gitgate's keys are GitHub keys: an ssh pointed at this agent for any other host gets none.
+    boolean forGitHub(String sshCommandLine) {
+        var host = SshTarget.host(sshCommandLine);
+        return host != null && settings.getSshHosts().stream().anyMatch(h -> h.equalsIgnoreCase(host));
+    }
+
     @Override public List<AgentKey> offer(List<AgentKey> all, PeerIdentity peer, List<ProcessTree.RawLink> chain, String sshCommandLine) {
+        if (!forGitHub(sshCommandLine)) {
+            System.err.println("gitgate: no key for " + SshTarget.host(sshCommandLine) + ": gitgate's keys are for " + settings.getSshHosts());
+            return List.of();
+        }
         var account = account(SshTarget.of(sshCommandLine));
         if (account.isEmpty()) return List.of();
         return all.stream().filter(k -> secrets.keys.owner(k).map(o -> o.equalsIgnoreCase(account.get().getId())).orElse(false)).toList();
@@ -40,7 +50,7 @@ final class AgentPolicy implements SignPolicy {
 
     @Override public boolean allow(Request r) {
         var owner = secrets.keys.owner(r.key());
-        if (owner.isEmpty()) return false;
+        if (owner.isEmpty() || !forGitHub(r.sshCommandLine())) return false;
         var target = SshTarget.of(r.sshCommandLine());
         var account = account(target);
         if (account.isPresent() && !account.get().getId().equalsIgnoreCase(owner.get())) {

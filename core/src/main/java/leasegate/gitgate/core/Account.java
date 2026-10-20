@@ -22,6 +22,9 @@ public final class Account extends Account_A {
     List<String> pathRegex = List.of();
     String ssh = "gate";
     List<String> forbidden = List.of();
+    /// Regular expressions over file paths that must never be pushed under this account (a file
+    /// added or changed in an unpushed commit).
+    List<String> forbiddenPaths = List.of();
 
     public boolean viaGate() { return ssh == null || ssh.isBlank() || ssh.equalsIgnoreCase("gate"); }
 

@@ -26,6 +26,9 @@ gitgate is a [leasegate](https://github.com/leasegate/leasegate) gate for git an
 ```toml
 windows = 'glow'           # optional: 'glow' (default) or 'native', how the tray's windows are framed
 resizableWindows = 'glow'  # optional: 'native' keeps Windows' snap and edge resizing for the resizable ones
+sharedAuthors = []         # optional: addresses any account's commits may carry besides its own (e.g. a coding agent's)
+ignore = []                # optional: patterns gitgate setup writes into git's global ignore file
+sshHosts = ['github.com']  # the hosts gitgate's agent serves; an ssh to any other host gets no key from it
 
 [binaries]
 git = 'C:\tools\git\cmd\git.exe'
@@ -55,6 +58,7 @@ paths = ['C:\code\example-org']
 pathRegex = ['.*/example-org-.*/.*']
 ssh = 'gate'               # or the path of a key file: the old, readable-by-anyone way
 forbidden = ['internal-codename']
+forbiddenPaths = ['(^|/)notes/']  # optional: file paths (regexes) never pushed under this account
 ```
 
 Write Windows paths in single quotes: in a double-quoted TOML string every backslash is an escape.

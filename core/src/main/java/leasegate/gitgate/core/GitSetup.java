@@ -30,6 +30,7 @@ public final class GitSetup {
     public static Path config() { return dir().resolve("gitgate.gitconfig"); }
     public static Path hooks() { return dir().resolve("hooks"); }
     public static Path sshInclude() { return dir().resolve("ssh_config"); }
+    public static Path ignoreFile() { return dir().resolve("ignore"); }
     public static Path sshConfig() { return Path.of(System.getProperty("user.home"), ".ssh", "config"); }
 
     /// Writes gitgate's own files from the settings: safe to run again whenever settings.toml changes.
@@ -39,6 +40,16 @@ public final class GitSetup {
         var cfg = new StringBuilder("# Written by gitgate from " + Places.settings() + " -- edit that, not this.\n");
         cfg.append("[core]\n\tsshCommand = ").append(s.getBinaries().getSsh().replace('\\', '/')).append('\n');
         cfg.append("\thooksPath = ").append(slash(hooks())).append('\n');
+        // git reads one global ignore file. When the settings list `ignore` patterns, gitgate writes
+        // one -- unless the user already names a file of their own, which then stays in charge.
+        var userExcludes = run(s.getBinaries().getGit(), "config", "--global", "--get", "core.excludesFile").trim();
+        if (!s.getIgnore().isEmpty()) {
+            if (userExcludes.isEmpty() || userExcludes.equalsIgnoreCase(slash(ignoreFile()))) {
+                Files.writeString(ignoreFile(), "# Written by gitgate from the `ignore` list in " + Places.settings() + " -- edit that, not this.\n" + String.join("\n", s.getIgnore()) + "\n");
+                cfg.append("\texcludesFile = ").append(slash(ignoreFile())).append('\n');
+                done.add(ignoreFile().toString());
+            } else done.add("your own core.excludesFile (" + userExcludes + ") stays in charge; add " + s.getIgnore() + " to it yourself");
+        }
         for (var a : s.getAccount()) {
             var file = dir().resolve("account-" + a.getId() + ".gitconfig");
             var id = s.identity(a, false);

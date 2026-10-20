@@ -13,10 +13,15 @@ public final class Settings extends Settings_A {
     Output output = new Output();
     NewRepo newRepo = new NewRepo();
     Anonymous anonymous = new Anonymous();
-    /// Addresses any account's repositories may carry as author or committer: a coding agent that
-    /// commits under its own name is a standard sight on GitHub, not a leak. A repository whose own
-    /// identity is one of these keeps it.
-    List<String> sharedAuthors = List.of("claude@anthropic.com", "noreply@anthropic.com");
+    /// Addresses any account's repositories may carry as author or committer besides the account's own
+    /// (for example a coding agent that commits under its own name). A repository whose own identity
+    /// is one of these keeps it. Empty unless the settings name some.
+    List<String> sharedAuthors = List.of();
+    /// The hosts gitgate's agent serves; an ssh to any other host gets no key from it.
+    List<String> sshHosts = List.of("github.com");
+    /// Patterns for git's global ignore file, which gitgate setup writes when this is not empty (and
+    /// the user has no core.excludesFile of their own). Empty unless the settings name some.
+    List<String> ignore = List.of();
     /// How the tray's windows are framed: 'glow' (default) or 'native'; `resizableWindows` the same
     /// for the resizable ones ('native' keeps Windows' snap and edge resizing).
     String windows = "glow";

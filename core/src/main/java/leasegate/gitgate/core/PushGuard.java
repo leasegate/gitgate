@@ -43,5 +43,26 @@ public final class PushGuard {
         return hits;
     }
 
+    /// Files added or changed in commits not yet on a remote whose path matches one of the account's
+    /// `forbiddenPaths`.
+    public static List<String> paths(String git, Path repo, Account account) {
+        if (account.getForbiddenPaths().isEmpty()) return List.of();
+        var patterns = account.getForbiddenPaths().stream().map(Pattern::compile).toList();
+        var hits = new java.util.TreeSet<String>();
+        try {
+            var p = new ProcessBuilder(git, "-c", "core.quotepath=off", "log", "--name-only", "--diff-filter=AM", "--format=",
+                "--branches", "--tags", "--not", "--remotes").directory(repo.toFile()).redirectErrorStream(true).start();
+            try (var in = new BufferedReader(new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    var path = line.strip();
+                    if (!path.isEmpty() && patterns.stream().anyMatch(x -> x.matcher(path).find())) hits.add(path);
+                }
+            }
+            p.waitFor();
+        } catch (Exception e) { return List.of("(the path check failed: " + e.getMessage() + ")"); }
+        return List.copyOf(hits);
+    }
+
     private PushGuard() {}
 }

@@ -23,6 +23,15 @@ record SshTarget(Tier tier, String detail, String repo) {
         return new SshTarget(Tier.READ, "ssh " + (h.find() ? h.group(1) : "(no git command)"), null);
     }
 
+    static final Pattern USER_AT_HOST = Pattern.compile("\\s[^\\s@'\"-][^\\s@'\"]*@([\\w.-]+)(\\s|$)");
+
+    /// The host ssh connects to (`git@github.com` -> `github.com`), null when the command line
+    /// names none in the user@host form.
+    static String host(String commandLine) {
+        var m = USER_AT_HOST.matcher(" " + commandLine + " ");
+        return m.find() ? m.group(1).toLowerCase() : null;
+    }
+
     /// The GitHub organisation (or user) the repository belongs to.
     String org() {
         if (repo == null) return null;

@@ -30,9 +30,10 @@ public class HooksTrial {
         var work = Files.createDirectories(root.resolve("work"));
         var toml = root.resolve("settings.toml");
         Files.writeString(toml, String.join("\n",
+            "sharedAuthors = ['agent@example.org']", "ignore = ['/notes/', 'AGENTS.md']", "",
             "[binaries]", "git = '" + git + "'", "",
             "[newRepo]", "defaultAccount = 'aa'", "",
-            "[[account]]", "id = 'aa'", "name = 'Alpha'", "userName = 'alpha'", "userEmail = 'alpha@example.org'", "orgs = ['alpha-org']", "paths = ['" + work + "']", "",
+            "[[account]]", "id = 'aa'", "name = 'Alpha'", "userName = 'alpha'", "userEmail = 'alpha@example.org'", "orgs = ['alpha-org']", "paths = ['" + work + "']", "forbiddenPaths = ['(^|/)notes/.*\\.md$']", "",
             "[[account]]", "id = 'bb'", "name = 'Beta'", "userName = 'beta'", "userEmail = 'beta@example.org'", "orgs = ['beta-org']", ""));
         var s = SettingsStore.load(toml);
 
@@ -44,8 +45,9 @@ public class HooksTrial {
             mine.contains("sshCommand = ") && mine.contains("hooksPath = ") && mine.contains("hasconfig:remote.*.url:git@github.com:alpha-org/**") && mine.contains("gitdir/i:" + work.toString().replace('\\', '/') + "/"));
         var ssh = Files.readString(root.resolve("userhome/.ssh/config"));
         check("~/.ssh/config: one Include line first, the agent in gitgate's own file, the user's own block kept", ssh.startsWith(GitSetup.SSH_MARK) && ssh.contains("Include ") && Files.readString(GitSetup.sshInclude()).contains("IdentityAgent //./pipe/") && ssh.contains("Host other"));
-        check("hooks written", Files.exists(GitSetup.hooks().resolve("pre-commit")) && Files.exists(GitSetup.hooks().resolve("pre-push")));
-        check("install again changes nothing", GitSetup.install(s, "C:/fake/gitgate.exe").size() == 3);
+        check("the settings' ignore list becomes git's global ignore file", mine.contains("excludesFile = ") && Files.readString(GitSetup.ignoreFile()).contains("/notes/"));
+        check("hooks written",Files.exists(GitSetup.hooks().resolve("pre-commit")) && Files.exists(GitSetup.hooks().resolve("pre-push")));
+        check("install again changes nothing", GitSetup.install(s, "C:/fake/gitgate.exe").size() == 4);
 
         var other = Files.createDirectories(root.resolve("elsewhere"));
         var rb = repo(other.resolve("rb"));
@@ -73,13 +75,22 @@ public class HooksTrial {
         check("...and the reason names the commit", err.toString().contains("carry another identity"));
 
         var rc = repo(work.resolve("rc"));
-        g(rc, "config", "user.name", "Claude Code");
-        g(rc, "config", "user.email", "claude@anthropic.com");
-        check("pre-commit, the repo commits as a shared author (Claude): recorded, the identity kept, commit goes on",
-            Hooks.preCommit(s, rc, never, out) == 0 && "aa".equals(cfg(rc, "gitgate.account")) && "claude@anthropic.com".equals(cfg(rc, "user.email")));
-        commit(rc, "Claude Code", "claude@anthropic.com", "agent");
+        g(rc, "config", "user.name", "Coding Agent");
+        g(rc, "config", "user.email", "agent@example.org");
+        check("pre-commit, the repo commits as a shared author (a coding agent): recorded, the identity kept, commit goes on",
+            Hooks.preCommit(s, rc, never, out) == 0 && "aa".equals(cfg(rc, "gitgate.account")) && "agent@example.org".equals(cfg(rc, "user.email")));
+        commit(rc, "Coding Agent", "agent@example.org", "agent");
         commit(rc, "alpha", "alpha@example.org", "human");
         check("pre-push with commits by the account and by a shared author: allowed", Hooks.prePush(s, rc, "git@github.com:alpha-org/rc.git", never, out) == 0);
+
+        var rp = repo(work.resolve("rp"));
+        Hooks.preCommit(s, rp, never, out);
+        Files.createDirectories(rp.resolve("notes"));
+        Files.writeString(rp.resolve("notes/plan.md"), "plans");
+        g(rp, "add", "-f", "notes/plan.md");
+        g(rp, "-c", "user.name=alpha", "-c", "user.email=alpha@example.org", "-c", "core.hooksPath=", "commit", "-q", "-m", "notes");
+        check("pre-push with a file the account never publishes (notes/*.md): refused", Hooks.prePush(s, rp, "git@github.com:alpha-org/rp.git", never, out) == 1);
+        check("...and git's global ignore keeps notes/ out of git add", cfg(rp, "core.excludesFile").endsWith("/ignore") && ignored(rp, "notes/more.md") && !ignored(rp, "src/notes/Thing.java"));
 
         GitSetup.undo(s);
         check("undo: the include line is gone, the rest of the global config kept", !Files.readString(global).contains(GitSetup.slash(GitSetup.config())) && Files.readString(global).contains("user@example.com"));
@@ -99,6 +110,11 @@ public class HooksTrial {
         Files.writeString(repo.resolve(msg + ".txt"), msg);
         g(repo, "add", ".");
         g(repo, "-c", "user.name=" + name, "-c", "user.email=" + email, "-c", "core.hooksPath=", "commit", "-q", "-m", msg);
+    }
+
+    static boolean ignored(Path repo, String path) throws Exception {
+        var p = new ProcessBuilder(git, "check-ignore", "-q", "--no-index", path).directory(repo.toFile()).start();
+        return p.waitFor() == 0;
     }
 
     static String cfg(Path repo, String key) throws Exception {

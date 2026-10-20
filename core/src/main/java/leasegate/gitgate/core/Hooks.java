@@ -89,6 +89,13 @@ public final class Hooks {
             err.println("If they are rightly someone else's, push with GITGATE_ALLOW_AUTHOR=1.");
             return 1;
         }
+        var paths = PushGuard.paths(git, repo.get().workTree(), account);
+        if (!paths.isEmpty() && !"1".equals(System.getenv("GITGATE_ALLOW_PATHS"))) {
+            err.println("gitgate: push refused. Account " + account.getId() + " never publishes these files, and unpushed commits add or change them:");
+            paths.forEach(p -> err.println("  " + p));
+            err.println("Take them out of those commits (git rm --cached, then rewrite the unpushed commits), or push with GITGATE_ALLOW_PATHS=1 if this is deliberate.");
+            return 1;
+        }
         var hits = PushGuard.scan(git, repo.get().workTree(), account);
         if (!hits.isEmpty() && !"1".equals(System.getenv("GITGATE_ALLOW_FORBIDDEN"))) {
             err.println("gitgate: push refused. These commits carry terms that account " + account.getId() + " must never publish:");
