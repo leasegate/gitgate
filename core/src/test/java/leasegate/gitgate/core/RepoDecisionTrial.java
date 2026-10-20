@@ -107,7 +107,7 @@ public class RepoDecisionTrial {
     static void commit(Path repo, String name, String email, String msg) throws Exception {
         Files.writeString(repo.resolve(msg + ".txt"), msg);
         g(repo, "add", ".");
-        g(repo, "-c", "user.name=" + name, "-c", "user.email=" + email, "commit", "-q", "-m", msg);
+        g(repo, "-c", "user.name=" + name, "-c", "user.email=" + email, "-c", "core.hooksPath=", "commit", "-q", "-m", msg);
     }
 
     static void g(Path dir, String... args) throws Exception {

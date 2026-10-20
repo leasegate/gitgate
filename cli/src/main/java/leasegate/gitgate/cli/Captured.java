@@ -8,7 +8,7 @@ record Captured(int exit, String out) {
 
     static Captured run(List<String> command, Map<String, String> env) {
         try {
-            var pb = new ProcessBuilder(command).redirectErrorStream(true);
+            var pb = new ProcessBuilder(GitRun.WINDOWS ? command.stream().map(GitRun::winArg).toList() : command).redirectErrorStream(true);
             pb.environment().putAll(env);
             var p = pb.start();
             var out = new String(p.getInputStream().readAllBytes());

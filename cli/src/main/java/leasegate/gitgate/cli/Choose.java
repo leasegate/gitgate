@@ -50,13 +50,5 @@ final class Choose {
         return new Run(a, anonymous, "ACCOUNT(%s,%s)%s ACTIVATEDBY(%s)".formatted(a.getId(), a.getName(), anonymous ? " IDENTITY(anonymous)" : "", how));
     }
 
-    /// After `git clone` under an account: the new repository records it at once.
-    static void recordClone(Settings s, Path cwd, String url, String target, Run run) {
-        if (run.account() == null) return;
-        var name = target != null ? target : url.replaceAll("[/\\\\]+$", "").replaceAll("\\.git$", "").replaceAll(".*[/:]", "");
-        var dir = cwd.resolve(name);
-        if (Files.isDirectory(dir.resolve(".git"))) RepoRecord.write(s.getBinaries().getGit(), dir, s, run.account(), run.anonymous(), "cloned from " + url);
-    }
-
     private Choose() {}
 }

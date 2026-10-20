@@ -61,7 +61,7 @@ public final class RepoDecision {
             if (!against.isEmpty())
                 return new Ask("this repository is recorded as account " + recorded.getId() + ", but " + String.join(", ", against), list(sources), recorded.getId());
             var want = s.identity(recorded, r.anonymous());
-            var stale = !want.name().equals(r.userName()) || !want.email().equalsIgnoreCase(String.valueOf(r.userEmail()));
+            var stale = !s.shared(r.userEmail()) && (!want.name().equals(r.userName()) || !want.email().equalsIgnoreCase(String.valueOf(r.userEmail())));
             return new Decided(recorded, r.anonymous(), "recorded in the repository", stale);
         }
 

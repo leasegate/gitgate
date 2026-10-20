@@ -28,6 +28,9 @@ public final class RepoRecord {
         var id = s.identity(a, anonymous);
         config(git, workTree, "gitgate.account", a.getId());
         config(git, workTree, "gitgate.identity", anonymous ? "anonymous" : "account");
+        // a repository set to commit as a shared author (a coding agent) keeps that identity, unless it is made anonymous
+        var own = RepoConfig.find(workTree).map(RepoConfig::userEmail).orElse(null);
+        if (!anonymous && s.shared(own)) { remember(workTree, new Seen(a.getId(), anonymous, how, Instant.now().toString())); return; }
         config(git, workTree, "user.name", id.name());
         config(git, workTree, "user.email", id.email());
         remember(workTree, new Seen(a.getId(), anonymous, how, Instant.now().toString()));

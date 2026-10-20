@@ -13,6 +13,10 @@ public final class Settings extends Settings_A {
     Output output = new Output();
     NewRepo newRepo = new NewRepo();
     Anonymous anonymous = new Anonymous();
+    /// Addresses any account's repositories may carry as author or committer: a coding agent that
+    /// commits under its own name is a standard sight on GitHub, not a leak. A repository whose own
+    /// identity is one of these keeps it.
+    List<String> sharedAuthors = List.of("claude@anthropic.com", "noreply@anthropic.com");
     /// How the tray's windows are framed: 'glow' (default) or 'native'; `resizableWindows` the same
     /// for the resizable ones ('native' keeps Windows' snap and edge resizing).
     String windows = "glow";
@@ -29,6 +33,16 @@ public final class Settings extends Settings_A {
         if (org == null) return Optional.empty();
         return account.stream().filter(a -> a.getOrgs().stream().anyMatch(o -> o.equalsIgnoreCase(org))).findFirst();
     }
+
+    /// Every address a commit in a repository of this account may carry.
+    public java.util.Set<String> allowedEmails(Account a, boolean anonymous) {
+        var out = new java.util.TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        if (anonymous) out.add(this.anonymous.getUserEmail()); else out.addAll(a.ownEmails());
+        out.addAll(sharedAuthors);
+        return out;
+    }
+
+    public boolean shared(String email) { return email != null && sharedAuthors.stream().anyMatch(e -> e.equalsIgnoreCase(email)); }
 
     /// Who commits in a repository of this account: its own identity, or the anonymous one.
     public Identity identity(Account a, boolean anonymous) {

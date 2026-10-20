@@ -90,7 +90,6 @@
                             <icon>${project.basedir}/src/main/jr/gitgate.ico</icon>
                         </configuration>
                         <executions>
-                            <execution><id>git</id><goals><goal>exe</goal></goals><configuration><name>git</name><appId>io.github.leasegate:gitgate-git</appId><fileDescription>git through gitgate</fileDescription></configuration></execution>
                             <execution><id>gh</id><goals><goal>exe</goal></goals><configuration><name>gh</name><appId>io.github.leasegate:gitgate-gh</appId><fileDescription>gh through gitgate</fileDescription></configuration></execution>
                             <execution><id>git1st</id><goals><goal>exe</goal></goals><configuration><name>git1st</name><appId>io.github.leasegate:gitgate-git1st</appId><fileDescription>make this folder a GitHub repository</fileDescription></configuration></execution>
                         </executions>

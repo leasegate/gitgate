@@ -42,7 +42,7 @@ public final class Hooks {
         var want = s.identity(account, anonymous);
         var now = new Identity(config(git, repo.get().workTree(), "user.name"), config(git, repo.get().workTree(), "user.email"));
         RepoRecord.write(git, repo.get().workTree(), s, account, anonymous, how);
-        if (want.name().equals(now.name()) && want.email().equalsIgnoreCase(now.email())) return 0;
+        if (s.shared(now.email()) || (want.name().equals(now.name()) && want.email().equalsIgnoreCase(now.email()))) return 0;
         err.println("gitgate: " + repo.get().workTree() + " is now recorded as " + account.getId() + " (" + want + ").");
         err.println("gitgate: this commit was started as " + now + ", so it was stopped. Run the commit again.");
         return 1;
@@ -80,7 +80,7 @@ public final class Hooks {
                 + ": its commits would arrive there under the wrong account. Push to a remote of " + account.getId() + ", or change the record: gitgate assign " + target.get().getId());
             return 1;
         }
-        var allowed = anonymous ? java.util.Set.of(s.getAnonymous().getUserEmail()) : account.ownEmails();
+        var allowed = s.allowedEmails(account, anonymous);
         var strangers = IdentityGuard.scan(git, repo.get().workTree(), allowed);
         if (!strangers.isEmpty() && !"1".equals(System.getenv("GITGATE_ALLOW_AUTHOR"))) {
             err.println("gitgate: push refused. This repository pushes as " + account.getId() + " (" + s.identity(account, anonymous) + "), and these unpushed commits carry another identity:");

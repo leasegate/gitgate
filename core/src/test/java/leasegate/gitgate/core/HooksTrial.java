@@ -72,6 +72,15 @@ public class HooksTrial {
         check("pre-push with a commit under the other identity: refused", Hooks.prePush(s, ra, "git@github.com:alpha-org/ra.git", never, out) == 1);
         check("...and the reason names the commit", err.toString().contains("carry another identity"));
 
+        var rc = repo(work.resolve("rc"));
+        g(rc, "config", "user.name", "Claude Code");
+        g(rc, "config", "user.email", "claude@anthropic.com");
+        check("pre-commit, the repo commits as a shared author (Claude): recorded, the identity kept, commit goes on",
+            Hooks.preCommit(s, rc, never, out) == 0 && "aa".equals(cfg(rc, "gitgate.account")) && "claude@anthropic.com".equals(cfg(rc, "user.email")));
+        commit(rc, "Claude Code", "claude@anthropic.com", "agent");
+        commit(rc, "alpha", "alpha@example.org", "human");
+        check("pre-push with commits by the account and by a shared author: allowed", Hooks.prePush(s, rc, "git@github.com:alpha-org/rc.git", never, out) == 0);
+
         GitSetup.undo(s);
         check("undo: the include line is gone, the rest of the global config kept", !Files.readString(global).contains(GitSetup.slash(GitSetup.config())) && Files.readString(global).contains("user@example.com"));
         check("undo: ~/.ssh/config is the user's own again", Files.readString(root.resolve("userhome/.ssh/config")).equals("Host other\n    HostName other.example\n"));
