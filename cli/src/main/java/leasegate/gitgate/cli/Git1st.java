@@ -40,6 +40,7 @@ final class Git1st {
         if (!yes("Create it? (y/N)")) { System.out.println("Nothing was done."); return 0; }
 
         if (!Files.exists(here.resolve(".git"))) git("init", "--initial-branch=main");
+        RepoRecord.write(s.getBinaries().getGit(), here, s, account, false, "git1st");
         copyGitignore(here, ignore);
         git("config", "core.safecrlf", "false");
         git("add", ".");
@@ -117,9 +118,9 @@ final class Git1st {
 
     boolean yes(String prompt) { return ask(prompt, "n").toLowerCase().startsWith("y"); }
 
-    int git(String... args) { return GitRun.exec(GitRun.command(s, account, List.of(args)), GitRun.env(account)); }
+    int git(String... args) { return GitRun.exec(GitRun.command(s, account, false, List.of(args)), GitRun.env(account)); }
 
-    Captured gitCaptured(String... args) { return Captured.run(GitRun.command(s, account, List.of(args)), GitRun.env(account)); }
+    Captured gitCaptured(String... args) { return Captured.run(GitRun.command(s, account, false, List.of(args)), GitRun.env(account)); }
 
     Captured gh(String... args) {
         if (token == null) {

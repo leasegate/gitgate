@@ -34,6 +34,24 @@ final class Gate {
         }
     }
 
+    record Choice(String account, boolean anonymous) {}
+
+    /// Asks the human which account a repository belongs to. Blocks until they answer in the tray's
+    /// window; a closed window is a LeaseDeniedException.
+    static Choice decide(String repo, String remotes, String why, java.util.List<String> sources, java.util.List<String> authors, String suggested, String tool) {
+        try (var io = Links.open(Places.PRODUCT, Places.runDir(), Places.PIPE)) {
+            var body = M.createObjectNode().put("v", 2).put("op", "decide").put("app", tool)
+                .put("repo", repo).put("remotes", remotes).put("why", why).put("suggested", suggested);
+            sources.forEach(body.putArray("sources")::add);
+            authors.forEach(body.putArray("authors")::add);
+            io.writeFrame(frame(body));
+            var reply = reply(io.readFrame());
+            if (!reply.path("ok").asBoolean(false))
+                throw new LeaseDeniedException(reply.path("error").asText("not decided"), reply.path("hint").asText(null));
+            return new Choice(reply.path("account").asText(), reply.path("anonymous").asBoolean(false));
+        }
+    }
+
     static JsonNode reply(String raw) {
         if (raw == null) throw new LeaseDeniedException("gitgate closed the connection", null);
         try { return M.readTree(raw).path("gate"); } catch (Exception e) { throw new LeaseDeniedException("unreadable reply from gitgate", null); }

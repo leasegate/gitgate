@@ -11,6 +11,7 @@ import leasegate.core.Replies;
 import leasegate.core.access.Handshake;
 import leasegate.core.access.ProcessTree;
 import leasegate.gitgate.core.*;
+import leasegate.frame.*;
 
 import static leasegate.core.Replies.M;
 
@@ -22,11 +23,13 @@ final class ControlHandler {
     final LeaseEngine<GitScope> engine;
     final Secrets secrets;
     final Settings settings;
+    final leasegate.frame.Brand brand;
 
-    ControlHandler(LeaseEngine<GitScope> engine, Secrets secrets, Settings settings) {
+    ControlHandler(LeaseEngine<GitScope> engine, Secrets secrets, Settings settings, leasegate.frame.Brand brand) {
         this.engine = engine;
         this.secrets = secrets;
         this.settings = settings;
+        this.brand = brand;
     }
 
     void handle(ConsumerServer.Accepted a) {
@@ -40,7 +43,8 @@ final class ControlHandler {
                 case "ping" -> Replies.wrap(M.createObjectNode().put("ok", true).put("product", Places.PRODUCT));
                 case "status" -> status();
                 case "token" -> token(a, raw, hs);
-                default -> Replies.denied("unknown op " + hs.op(), "use ping, status or token");
+                case "decide" -> decide(hs);
+                default -> Replies.denied("unknown op " + hs.op(), "use ping, status, token or decide");
             });
         } catch (RuntimeException e) {
             System.err.println("gitgate: request from pid " + a.peer().pid() + " failed: " + e.getMessage());
@@ -62,6 +66,21 @@ final class ControlHandler {
             case Outcome.Allowed(var grant) -> Replies.approved("attested", grant.expiresAt(),
                 M.createObjectNode().put("account", account).put("tier", tier.word).put("token", secrets.tokenFor(account, admin).orElseThrow()), null);
         };
+    }
+
+    /// Which account a repository is: releases nothing, so any process may ask -- the answer comes
+    /// from the human in the window, and the asking git command writes it into the repository.
+    String decide(Handshake hs) {
+        var b = hs.body();
+        var sources = new java.util.ArrayList<String>();
+        b.path("sources").forEach(n -> sources.add(n.asText()));
+        var authors = new java.util.ArrayList<String>();
+        b.path("authors").forEach(n -> authors.add(n.asText()));
+        var r = new DecideWindow.Request(b.path("repo").asText("?"), b.path("remotes").asText(""), b.path("why").asText(""),
+            sources, authors, b.path("suggested").asText(null), hs.app() != null ? hs.app() : "git");
+        return DecideWindow.ask(brand, settings, r)
+            .map(c -> Replies.wrap(M.createObjectNode().put("ok", true).put("account", c.account()).put("anonymous", c.anonymous())))
+            .orElseGet(() -> Replies.denied("not decided: the window was closed", "decide it with gitgate assign <account> in the repository, or run the command again"));
     }
 
     String status() {

@@ -14,10 +14,11 @@ final class GhRun {
 
     static int proxy(List<String> args, String pinned) {
         var s = SettingsStore.load();
-        var match = GitRun.resolve(s, pinned);
-        Notice.account(s, match.map(AccountMatcher.Match::line).orElse(AccountMatcher.noMatchLine("gh")), args.isEmpty());
-        if (match.isEmpty()) return GitRun.exec(command(s, args), Map.of());
-        var a = match.get().account();
+        var needs = !args.isEmpty() && !args.getFirst().equals("--version") && !args.getFirst().equals("help");
+        var run = Choose.decide(s, java.nio.file.Path.of("").toAbsolutePath(), pinned, null, needs, "gh");
+        Notice.account(s, run.line(), args.isEmpty());
+        if (run.account() == null) return GitRun.exec(command(s, args), Map.of());
+        var a = run.account();
         return switch (GhCommand.classify(args)) {
             case GhCommand.Refused(var reason) -> { System.err.println("gitgate: " + reason); yield 1; }
             case GhCommand.Allowed(var tier, var detail) -> {

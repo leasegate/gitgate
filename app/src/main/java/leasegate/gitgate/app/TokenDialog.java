@@ -2,15 +2,16 @@ package leasegate.gitgate.app;
 
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
 import leasegate.gitgate.core.Settings;
+import leasegate.frame.Brand;
+import leasegate.frame.SecretField;
+import leasegate.frame.FKeys;
+import leasegate.frame.GateFrame;
 import leasegate.ui.ApprovalParts;
-import leasegate.ui.FKeys;
 
 /// Sets or replaces an account's GitHub token: pasted here, checked with GitHub (who it belongs
 /// to, whether it can delete repositories), then stored in the vault. Never on a command line,
@@ -18,13 +19,14 @@ import leasegate.ui.FKeys;
 /// repositories; an optional admin token, used only for ADMIN requests, may.
 final class TokenDialog {
 
-    static void show(Settings settings, Secrets secrets, Runnable changed) {
-        var stage = new Stage();
+    static void show(Brand brand, Settings settings, Secrets secrets, Runnable changed) {
+        var frame = new GateFrame(brand, "set a GitHub token");
+        var stage = frame.stage;
         var accounts = new ChoiceBox<String>(FXCollections.observableArrayList(settings.getAccount().stream().map(a -> a.getId() + " · " + a.getName()).toList()));
         accounts.getSelectionModel().selectFirst();
         var kind = new ChoiceBox<String>(FXCollections.observableArrayList("everyday token", "admin token (only for ADMIN requests)"));
         kind.getSelectionModel().selectFirst();
-        var token = new PasswordField();
+        var token = new SecretField();
         token.setPromptText("paste the token");
         var result = new Label(" ");
         result.setWrapText(true);
@@ -51,11 +53,7 @@ final class TokenDialog {
             ApprovalParts.small("Arrows choose · F2 checks the token with GitHub · Enter checks and saves · Esc cancels", "#777"));
         root.setPadding(new Insets(14));
         root.setPrefWidth(560);
-        var scene = new Scene(root);
-        keys.install(scene);
-        stage.setTitle("gitgate: set a GitHub token");
-        stage.setScene(scene);
-        stage.setAlwaysOnTop(true);
+        keys.install(frame.scene(root));
         stage.show();
         token.requestFocus();
     }

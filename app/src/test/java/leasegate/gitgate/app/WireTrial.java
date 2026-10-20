@@ -53,7 +53,7 @@ public class WireTrial {
         var engine = new LeaseEngine<GitScope>(rules, approver, new KeyedAppStore<>(home.resolve("keyed.json"), rules));
         var control = LeaseServer.open(home.resolve("run"), Places.PIPE);
         var agentPipe = LeaseServer.open(home.resolve("run"), Places.AGENT_PIPE);
-        var handler = new ControlHandler(engine, secrets, settings);
+        var handler = new ControlHandler(engine, secrets, settings, new leasegate.frame.Brand("gitgate", "#2e7d32", null));
         Thread.ofPlatform().daemon().start(() -> LeaseServer.serve(control, "wire", handler::handle));
         Thread.ofPlatform().daemon().start(() -> new AgentServer(() -> { listed.incrementAndGet(); return secrets.keys.keys(); }, new AgentPolicy(engine, secrets)).serve(agentPipe, "wire-agent"));
 

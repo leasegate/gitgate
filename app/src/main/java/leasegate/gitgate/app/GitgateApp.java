@@ -11,6 +11,7 @@ import leasegate.gitgate.core.*;
 import leasegate.sshagent.AgentServer;
 import leasegate.transport.LeaseDeniedException;
 import leasegate.transport.Links;
+import leasegate.frame.*;
 import leasegate.ui.*;
 
 /// The gitgate tray. Unlock first: the passphrase opens the gate and its vault, and nothing starts
@@ -35,20 +36,21 @@ public final class GitgateApp extends Application {
 
     @Override public void start(Stage stage) {
         if (alreadyRunning()) { System.err.println("gitgate is already running"); Platform.exit(); return; }
+        GateFrame.styles(GateFrame.Style.of(settings.getWindows()), GateFrame.Style.of(settings.getResizableWindows()));
         stage.setTitle(Places.PRODUCT);
-        var vault = VaultUnlock.open(gate, Places.vault(), Places.PRODUCT);
+        var brand = new Brand(Places.PRODUCT, "#2e7d32", GateIcon.image(GitgateApp.class, "brand.png", "#2e7d32"));
+        var vault = VaultUnlock.open(gate, Places.vault(), brand);
         var secrets = new Secrets(vault);
         secrets.keys.writeAllPublic();
 
         var rules = new GitRules(settings);
-        var brand = new Brand(Places.PRODUCT, "#2e7d32", GateIcon.image(GitgateApp.class, "brand.png", "#2e7d32"));
         var engine = new LeaseEngine<GitScope>(rules, new BlanketModeApproval<>(new FxApproval<>(gate, rules, brand), gate),
             new KeyedAppStore<>(Places.keyedApps(), rules));
         engine.trustApproval(new FxTrust<>(gate, rules, brand));
         engine.onExpiring(e -> Platform.runLater(() -> ExpiryWarningWindow.show(engine, gate, brand, e)));
         engine.startSweep();
 
-        var control = new ControlHandler(engine, secrets, settings);
+        var control = new ControlHandler(engine, secrets, settings, brand);
         var controlPipe = LeaseServer.open(Places.runDir(), Places.PIPE);
         var agentPipe = LeaseServer.open(Places.runDir(), Places.AGENT_PIPE);
         var agent = new AgentServer(secrets.keys::keys, new AgentPolicy(engine, secrets));
@@ -57,8 +59,9 @@ public final class GitgateApp extends Application {
 
         Runnable changed = () -> {};
         var tray = new TrayShell<>(stage, engine, gate, brand, () -> line(secrets, engine));
-        tray.addItem(TrayShell.item("Set GitHub token…", () -> TokenDialog.show(settings, secrets, changed)))
-            .addItem(TrayShell.item("SSH keys…", () -> KeysWindow.show(Places.PRODUCT, settings.getAccount().stream().map(a -> new KeysWindow.Entry(a.getId(), a.getName())).toList(), secrets.keys,
+        tray.addItem(TrayShell.item("Repositories and rules…", () -> RulesWindow.show(brand)))
+            .addItem(TrayShell.item("Set GitHub token…", () -> TokenDialog.show(brand, settings, secrets, changed)))
+            .addItem(TrayShell.item("SSH keys…", () -> KeysWindow.show(brand, settings.getAccount().stream().map(a -> new KeysWindow.Entry(a.getId(), a.getName())).toList(), secrets.keys,
                 "Add it on GitHub, signed in as that account: Settings, SSH and GPG keys, New SSH key.", changed)))
             .addItem(TrayShell.item("Open settings.toml", () -> open(Places.settings().toString())))
             .quit("Quit gitgate (git and gh stop working until it starts again)", vault::close)
