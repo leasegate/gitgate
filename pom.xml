@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.github.leasegate</groupId>
+    <artifactId>gitgate-parent</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>gitgate</name>
+    <description>git and GitHub CLI behind a leasegate gate: the account chosen by directory, SSH keys that never leave the gate, GitHub tokens released per process and per tier.</description>
+    <url>https://github.com/leasegate/gitgate</url>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>leasegate</id>
+            <name>Ivan Velikanov</name>
+            <email>ivan.velikanov.dev@gmail.com</email>
+            <url>https://github.com/leasegate</url>
+        </developer>
+    </developers>
+    <scm>
+        <url>https://github.com/leasegate/gitgate</url>
+        <connection>scm:git:https://github.com/leasegate/gitgate.git</connection>
+        <developerConnection>scm:git:git@github.com:leasegate/gitgate.git</developerConnection>
+    </scm>
+    <modules>
+        <module>core</module>
+        <module>cli</module>
+        <module>app</module>
+    </modules>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
+        <leasegate.version>0.1-SNAPSHOT</leasegate.version>
+        <jackson.version>2.21.2</jackson.version>
+        <datahelper.version>2.0</datahelper.version>
+        <picocli.version>4.7.6</picocli.version>
+        <jr.plugin.version>1.3.0</jr.plugin.version>
+    </properties>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>io.github.datapotter</groupId>
+                                <artifactId>datapotter-datahelper-processor</artifactId>
+                                <version>${datahelper.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

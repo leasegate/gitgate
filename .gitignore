@@ -1,0 +1,25 @@
+# Build output
+/target/
+*/target/
+*.jar
+*.aot
+*.aot.config
+
+# Never publish: PRPs and conversation logs carry real ids, paths and internal reasoning
+/prp/
+/.claude/
+CLAUDE.md
+
+# Credentials, in every shape
+credentials.json
+*.key
+*.pem
+*.p12
+.env
+
+# Logs
+*.log
+
+# Trial output and local classpath files
+target/
+cp.txt
