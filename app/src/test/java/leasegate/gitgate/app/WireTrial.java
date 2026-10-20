@@ -55,7 +55,7 @@ public class WireTrial {
         var agentPipe = LeaseServer.open(home.resolve("run"), Places.AGENT_PIPE);
         var handler = new ControlHandler(engine, secrets, settings, new leasegate.frame.Brand("gitgate", "#2e7d32", null));
         Thread.ofPlatform().daemon().start(() -> LeaseServer.serve(control, "wire", handler::handle));
-        Thread.ofPlatform().daemon().start(() -> new AgentServer(() -> { listed.incrementAndGet(); return secrets.keys.keys(); }, new AgentPolicy(engine, secrets)).serve(agentPipe, "wire-agent"));
+        Thread.ofPlatform().daemon().start(() -> new AgentServer(() -> { listed.incrementAndGet(); return secrets.keys.keys(); }, new AgentPolicy(engine, secrets, settings, new leasegate.frame.Brand("gitgate", "#2e7d32", null))).serve(agentPipe, "wire-agent"));
 
         var ls = cli(cli, home, pipe, "git", "ls-remote", "git@github.com:leasegate/leasegate.git");
         check("ssh, started by the git proxy, asked the gate's agent for its keys", listed.get() >= 1);

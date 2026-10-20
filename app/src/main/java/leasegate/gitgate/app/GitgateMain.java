@@ -27,6 +27,8 @@ public final class GitgateMain {
             case "which" -> which(args.length > 1 ? args[1] : ".");
             case "assign" -> assign(List.of(args).subList(1, args.length));
             case "audit" -> audit(List.of(args).subList(1, args.length));
+            case "setup" -> setup(args.length > 1 && args[1].equals("--undo"));
+            case "hook" -> hook(List.of(args).subList(1, args.length));
             default -> {
                 System.err.println("usage: gitgate                  start the tray (it holds the keys and tokens)");
                 System.err.println("       gitgate status           what the running tray holds: accounts, key fingerprints, tokens present");
@@ -35,6 +37,8 @@ public final class GitgateMain {
                 System.err.println("       gitgate which [dir]      which account a repository is, and what each rule says");
                 System.err.println("       gitgate assign <account> [--anonymous] [dir]   record a repository's account in its own .git/config");
                 System.err.println("       gitgate audit [dir...]   commits already made under another account's identity (default: every account's folders)");
+                System.err.println("       gitgate setup [--undo]   make the official git and ssh work through gitgate: its git config (included from ~/.gitconfig), its hooks, github.com in ~/.ssh/config");
+                System.err.println("       gitgate hook pre-commit|pre-push ...   what gitgate's git hooks run");
                 yield 2;
             }
         });
@@ -112,6 +116,55 @@ public final class GitgateMain {
         }
         System.out.println(leaky + " repositories carry commits under another account's identity");
         return leaky == 0 ? 0 : 3;
+    }
+
+    static int setup(boolean undo) {
+        try {
+            var s = SettingsStore.load();
+            var done = undo ? GitSetup.undo(s) : GitSetup.install(s, selfExe());
+            done.forEach(d -> System.out.println((undo ? "undone: " : "set: ") + d));
+            if (done.isEmpty()) System.out.println(undo ? "nothing of gitgate's was set" : "already set");
+            return 0;
+        } catch (Exception e) { System.err.println("gitgate: " + e.getMessage()); return 1; }
+    }
+
+    /// The exe the hooks call back: this one (jr names it), else `gitgate` on PATH.
+    static String selfExe() {
+        var exe = System.getProperty("io.github.jarrunner.jr.exe");
+        return exe != null && !exe.isBlank() ? exe : "gitgate";
+    }
+
+    static int hook(List<String> args) {
+        if (args.isEmpty()) { System.err.println("usage: gitgate hook pre-commit | pre-push <remote> <url>"); return 2; }
+        var s = SettingsStore.load();
+        var here = Path.of("").toAbsolutePath();
+        Hooks.Asker ask = a -> askTray(a, here);
+        return switch (args.getFirst()) {
+            case "pre-commit" -> Hooks.preCommit(s, here, ask, System.err);
+            case "pre-push" -> Hooks.prePush(s, here, args.size() > 2 ? args.get(2) : "", ask, System.err);
+            default -> 0;
+        };
+    }
+
+    /// The tray's "which account" window, over its pipe; empty when it is not running or nobody answered.
+    static java.util.Optional<Hooks.Choice> askTray(RepoDecision.Ask a, Path here) {
+        var s = SettingsStore.load();
+        var repo = RepoConfig.find(here);
+        var m = new ObjectMapper();
+        try (var io = Links.open(Places.PRODUCT, Places.runDir(), Places.PIPE)) {
+            var body = m.createObjectNode().put("v", 2).put("op", "decide").put("app", "git hook")
+                .put("repo", repo.map(r -> r.workTree().toString()).orElse(here.toString()))
+                .put("remotes", repo.map(r -> String.join("  ", r.remotes().values())).orElse("")).put("why", a.why()).put("suggested", a.suggested());
+            a.sources().forEach(body.putArray("sources")::add);
+            repo.ifPresent(r -> RepoRecord.recentAuthors(s.getBinaries().getGit(), r.workTree(), 4).forEach(body.putArray("authors")::add));
+            io.writeFrame(m.createObjectNode().set("gate", body).toString());
+            var reply = m.readTree(io.readFrame()).path("gate");
+            if (!reply.path("ok").asBoolean(false)) return java.util.Optional.empty();
+            return java.util.Optional.of(new Hooks.Choice(reply.path("account").asText(), reply.path("anonymous").asBoolean(false)));
+        } catch (LeaseDeniedException e) {
+            System.err.println("gitgate: the gitgate tray is not running, so it cannot ask.");
+            return java.util.Optional.empty();
+        } catch (Exception e) { System.err.println("gitgate: " + e.getMessage()); return java.util.Optional.empty(); }
     }
 
     /// An alias is the same exe under another name: it reads its account from that name.

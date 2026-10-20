@@ -50,10 +50,14 @@ public final class GitgateApp extends Application {
         engine.onExpiring(e -> Platform.runLater(() -> ExpiryWarningWindow.show(engine, gate, brand, e)));
         engine.startSweep();
 
+        // the git side follows settings.toml: its includeIf blocks and hooks are rewritten at every start
+        try { if (GitSetup.installed(settings)) GitSetup.writeFiles(settings, GitgateMain.selfExe()); }
+        catch (Exception e) { System.err.println("gitgate: could not refresh " + GitSetup.config() + ": " + e.getMessage()); }
+        Thread.ofPlatform().name("gitgate-settings-watch").daemon().start(GitgateApp::watchSettings);
         var control = new ControlHandler(engine, secrets, settings, brand);
         var controlPipe = LeaseServer.open(Places.runDir(), Places.PIPE);
         var agentPipe = LeaseServer.open(Places.runDir(), Places.AGENT_PIPE);
-        var agent = new AgentServer(secrets.keys::keys, new AgentPolicy(engine, secrets));
+        var agent = new AgentServer(secrets.keys::keys, new AgentPolicy(engine, secrets, settings, brand));
         Thread.ofPlatform().name("gitgate-control").daemon().start(() -> LeaseServer.serve(controlPipe, "gitgate", control::handle));
         Thread.ofPlatform().name("gitgate-agent").daemon().start(() -> agent.serve(agentPipe, "gitgate-agent"));
 
@@ -72,6 +76,27 @@ public final class GitgateApp extends Application {
         var keys = secrets.keys.all().size();
         var tokens = settings.getAccount().stream().filter(a -> secrets.tokenFor(a.getId(), false).isPresent()).count();
         return settings.getAccount().size() + " account(s) · " + keys + " key(s) · " + tokens + " token(s) · " + engine.activeGrants().size() + " approval(s)";
+    }
+
+    /// settings.toml changed (an account, an organisation, a folder): gitgate's git and ssh files are
+    /// written again at once, so the official git follows without a restart. A malformed file is
+    /// reported and the files are left as they were.
+    static void watchSettings() {
+        try (var w = java.nio.file.FileSystems.getDefault().newWatchService()) {
+            Places.home().register(w, java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY, java.nio.file.StandardWatchEventKinds.ENTRY_CREATE);
+            while (true) {
+                var key = w.take();
+                var changed = key.pollEvents().stream().anyMatch(e -> Places.settings().getFileName().equals(e.context()));
+                key.reset();
+                if (!changed) continue;
+                Thread.sleep(300);  // an editor writes in more than one step
+                try {
+                    var s = SettingsStore.load();
+                    if (GitSetup.installed(s)) { GitSetup.writeFiles(s, GitgateMain.selfExe()); System.err.println("gitgate: settings.toml changed; git and ssh files rewritten"); }
+                } catch (Exception e) { System.err.println("gitgate: settings.toml changed but could not be used: " + e.getMessage()); }
+            }
+        } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        catch (Exception e) { System.err.println("gitgate: cannot watch " + Places.settings() + ": " + e.getMessage()); }
     }
 
     static void open(String file) {
