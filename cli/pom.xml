@@ -8,6 +8,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>gitgate-cli</artifactId>
+    <name>gitgate cli: the git, gh and git1st launchers</name>
     <packaging>jar</packaging>
     <description>The git and gh proxies, the one-account aliases and git1st. No JavaFX, so they start fast.</description>
     <properties>

@@ -8,6 +8,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>gitgate-app</artifactId>
+    <name>gitgate app: the tray that holds the keys and tokens</name>
     <packaging>jar</packaging>
     <description>The gitgate tray: the vault, the ssh agent, the token server and the approval windows.</description>
     <properties>

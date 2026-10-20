@@ -8,6 +8,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>gitgate-core</artifactId>
+    <name>gitgate core: accounts, rules, push guard</name>
     <packaging>jar</packaging>
     <description>gitgate's settings, account matching, scope and rules, shared by the CLI proxies and the tray.</description>
     <dependencies>
