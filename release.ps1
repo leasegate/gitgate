@@ -90,8 +90,12 @@ if ($pre) { $notes += " This is a pre-release: installed stable copies are not o
 $notesFile = Join-Path $work 'release-notes.md'
 [IO.File]::WriteAllText($notesFile, $notes + "`n")
 $latest = if ($pre) { @('--prerelease', '--latest=false') } else { @('--latest=true') }
+# gh prints an ACCOUNT notice on stderr, which Windows PowerShell 5.1 turns into an error under 'Stop'
+$ErrorActionPreference = 'Continue'
 & $gh release create $tag $assets --repo $repo --target (Sha HEAD) --title "$name $Version" --notes-file $notesFile @latest
-if ($LASTEXITCODE -ne 0) { throw 'gh release create failed' }
+$ghExit = $LASTEXITCODE
+$ErrorActionPreference = 'Stop'
+if ($ghExit -ne 0) { throw 'gh release create failed' }
 Write-Host "published $tag"
 
 # GET every asset url BEFORE the update file goes anywhere: GitHub has served an asset with HTTP 500 on its
