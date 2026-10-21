@@ -69,6 +69,7 @@ public final class GitgateApp extends Application {
                 "Add it on GitHub, signed in as that account: Settings, SSH and GPG keys, New SSH key.", changed)))
             .addItem(TrayShell.item("Open settings.toml", () -> open(Places.settings().toString())))
             .describe("guards git and GitHub: SSH keys and GitHub tokens", "https://github.com/leasegate/gitgate")
+            .vault(vault::changePassphrase)
             .quit("Quit gitgate (git and gh stop working until it starts again)", vault::close)
             .install();
     }
