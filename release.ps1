@@ -89,7 +89,8 @@ $notes = "$name $Version. Windows: download $name.exe and run it; it fetches its
 if ($pre) { $notes += " This is a pre-release: installed stable copies are not offered it." }
 $notesFile = Join-Path $work 'release-notes.md'
 [IO.File]::WriteAllText($notesFile, $notes + "`n")
-$latest = if ($pre) { @('--prerelease', '--latest=false') } else { @('--latest=true') }
+# No --latest=true for a stable release: GitHub makes the newest non-pre-release the latest by itself, and passing the flag from here failed "gh release create" (as in cfucli's release.ps1).
+$latest = if ($pre) { @('--prerelease', '--latest=false') } else { @() }
 # gh prints an ACCOUNT notice on stderr, which Windows PowerShell 5.1 turns into an error under 'Stop'
 $ErrorActionPreference = 'Continue'
 & $gh release create $tag $assets --repo $repo --target (Sha HEAD) --title "$name $Version" --notes-file $notesFile @latest
