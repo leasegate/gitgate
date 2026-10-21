@@ -47,10 +47,10 @@ final class TokenDialog {
             stage.close();
         };
         token.textProperty().addListener((o, a, b) -> checked[0] = null);
-        var keys = new FKeys().bind(KeyCode.F2, "Check with GitHub", "#2e6da8", check).bind(KeyCode.ENTER, "Save", "#2e7d32", save)
+        var keys = new FKeys().bind(KeyCode.F2, "Check with GitHub", "#2e6da8", check).bind(KeyCode.F3, "Check and save", "#2e7d32", save)
             .bind(KeyCode.ESCAPE, "Cancel", "#777", stage::close);
         var root = new VBox(10, new Label("Account"), accounts, new Label("Which token"), kind, new Label("Token"), token, result, keys.bar,
-            ApprovalParts.small("Arrows choose · F2 checks the token with GitHub · Enter checks and saves · Esc cancels", "#777"));
+            ApprovalParts.small("Arrows choose · F2 checks the token with GitHub · F3 checks and saves · Esc cancels", "#777"));
         root.setPadding(new Insets(14));
         root.setPrefWidth(560);
         keys.install(frame.scene(root));

@@ -78,6 +78,7 @@ final class DecideWindow {
         stage.setOnHidden(e -> answer.complete(Optional.empty()));
 
         arming[0] = new Arming(fkeys.bar.getChildren().stream().filter(Button.class::isInstance).map(Button.class::cast).toList(), armLine);
+        arming[0].guard(scene);
         stage.show();
         stage.toFront();
         list.requestFocus();
