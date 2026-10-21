@@ -38,7 +38,7 @@ if ($Publish) {
     if (-not (Test-Path (Join-Path $PSScriptRoot '..\leasegate.github.io\.git'))) { throw "no site working copy at ..\leasegate.github.io - the update file goes there" }
 }
 
-$work = Join-Path ([IO.Path]::GetTempPath()) "$name-release-$Version"
+$work = Join-Path ([IO.Path]::GetTempPath()) "$name-release-$Version-$PID"
 if (Test-Path $work) { Remove-Item -Recurse -Force $work }
 New-Item -ItemType Directory -Path $work | Out-Null
 $tar = Join-Path $work 'src.tar'
