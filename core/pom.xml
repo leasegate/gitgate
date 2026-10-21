@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.github.leasegate</groupId>
         <artifactId>gitgate-parent</artifactId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.3-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>gitgate-core</artifactId>
