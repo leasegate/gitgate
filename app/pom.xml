@@ -72,6 +72,13 @@
         <profile>
             <id>jrexe</id>
             <activation><property><name>jrexe</name></property></activation>
+            <properties>
+                <!-- The exe's own version. release.ps1 passes X.Y.Z-label for a beta, which follows the beta channel only. -->
+                <jrexe.version>${project.version}</jrexe.version>
+                <jrexe.channel>stable</jrexe.channel>
+                <jrexe.release>https://github.com/leasegate/gitgate/releases/download/v${jrexe.version}</jrexe.release>
+                <jrexe.updates>https://leasegate.github.io/gitgate/update</jrexe.updates>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -85,6 +92,10 @@
                         </executions>
                         <configuration>
                             <name>gitgate</name>
+                            <appVersion>${jrexe.version}</appVersion>
+                            <jarUrl>${jrexe.release}/gitgate-{sha8}.jar</jarUrl>
+                            <updateUrl>${jrexe.updates}/gitgate.json</updateUrl>
+                            <updateChannel>${jrexe.channel}</updateChannel>
                             <icon>${project.basedir}/src/main/jr/gitgate.ico</icon>
                             <appId>io.github.leasegate:gitgate</appId>
                             <fileDescription>gitgate</fileDescription>
